@@ -9,9 +9,9 @@
   - name: Setup master
     include_tasks: setup-master.yml
     when: inventory_hostname in groups['master']
-  
+
   - name: Setup replicas
     include_tasks: setup-replica.yml
     when: inventory_hostname in groups['replica']
-      
+
   become: yes
