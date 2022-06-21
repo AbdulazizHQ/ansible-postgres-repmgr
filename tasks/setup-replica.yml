@@ -21,3 +21,8 @@
 - name: Register replica
   ansible.builtin.command: /usr/pgsql-14/bin/repmgr standby register --force
   become_user: postgres
+
+- name: Start rempgr daemon
+  ansible.builtin.systemd:
+    name: repmgr-14
+    state: started

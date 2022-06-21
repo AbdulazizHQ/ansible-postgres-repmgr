@@ -70,3 +70,8 @@
     port: 5432/tcp
     state: enabled
     zone: public
+
+- name: Start rempgr daemon
+  ansible.builtin.systemd:
+    name: repmgr-14
+    state: started
