@@ -64,3 +64,14 @@
 - name: Register primary
   ansible.builtin.script: ./files/register-primary.sh
   become_user: postgres
+
+- name: Open postgres ports
+  ansible.posix.firewalld:
+    port: 5432/tcp
+    state: enabled
+    zone: public
+
+- name: Start rempgr daemon
+  ansible.builtin.systemd:
+    name: repmgr-14
+    state: started

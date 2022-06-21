@@ -1,0 +1,28 @@
+- name: Configure rempgr
+  ansible.builtin.template:
+    src: ./templates/repmgr.conf.j2
+    dest: /etc/repmgr/14/repmgr.conf
+    mode: 0644
+
+- name: Stop postgres
+  ansible.builtin.systemd:
+    name: postgresql-14
+    state: stopped
+
+- name: Clone master
+  ansible.builtin.command: "/usr/pgsql-14/bin/repmgr -h {{hostvars[groups['master'][0]].ansible_default_ipv4.address}} -U repmgr -d repmgr standby clone --force"
+  become_user: postgres
+
+- name: Start postgres
+  ansible.builtin.systemd:
+    name: postgresql-14
+    state: started
+
+- name: Register replica
+  ansible.builtin.command: /usr/pgsql-14/bin/repmgr standby register --force
+  become_user: postgres
+
+- name: Start rempgr daemon
+  ansible.builtin.systemd:
+    name: repmgr-14
+    state: started
