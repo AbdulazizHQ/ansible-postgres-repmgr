@@ -1,0 +1,38 @@
+---
+- name: Ensure all packages are updated
+  ansible.builtin.yum:
+    name: "*"
+    state: latest
+
+- name: Add PostgreSQL repository
+  ansible.builtin.command:
+    cmd: yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+
+- name: Disable RHEL built-in PostgreSQL module
+  ansible.builtin.shell:
+    cmd: yum -qy module disable postgresql
+
+- name: Install PostgreSQL
+  ansible.builtin.yum:
+    name:
+      - postgresql14-server
+    state: latest
+
+- name: Install repmgr
+  ansible.builtin.yum:
+    name:
+      - repmgr_14
+    state: latest
+
+- name: Ensure that 'psycopg2' is Present
+  ansible.builtin.yum:
+    name: python3-psycopg2
+    state: latest
+
+- name: Open PostgreSQL ports
+  ansible.posix.firewalld:
+    state: enabled
+    port: 5432/tcp
+    permanent: true
+    zone: public
+

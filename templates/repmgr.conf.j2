@@ -1,0 +1,15 @@
+cluster='failovertest'
+
+node_id={{node_id}}
+
+node_name=postgres-0{{hostvars[inventory_hostname]['node_id']}}
+
+conninfo='host=postgres-0{{hostvars[inventory_hostname]['node_id']}} user=repmgr dbname=repmgr connect_timeout=2'
+
+data_directory='/var/lib/pgsql/14/data/'
+
+failover=automatic
+
+promote_command='/usr/pgsql-14/bin/repmgr standby promote --log-to-file'
+
+follow_command='/usr/pgsql-14/bin/repmgr standby follow --log-to-file --upstream-node-id=%n'

@@ -1,0 +1,66 @@
+---
+- name: Check PostgreSQL data directory
+  ansible.builtin.find:
+    paths: /var/lib/pgsql/14/data/
+  register: data_dir
+
+- name: Initialize PostgreSQL on Master
+  ansible.builtin.shell:
+    cmd: /usr/pgsql-14/bin/postgresql-14-setup initdb
+  when: data_dir.matched == 0
+
+- name: Ensure PostgreSQL is enabled
+  ansible.builtin.systemd:
+    name: postgresql-14
+    enabled: yes
+
+- name: Ensure PostgreSQL is started (Only on master)
+  ansible.builtin.systemd:
+    name: postgresql-14
+    state: started
+
+- name: Copy PostgreSQL configuration to server 
+  ansible.builtin.template:
+    src: ./templates/postgresql.conf.j2
+    dest: /var/lib/pgsql/14/data/postgresql.conf
+    mode: 0600
+    owner: postgres
+    group: postgres
+
+- block:
+  - name: Create repmgr user
+    community.postgresql.postgresql_user:
+      name: repmgr
+      role_attr_flags: SUPERUSER
+      state: present
+
+  - name: Create repmgr database
+    community.postgresql.postgresql_db:
+      name: repmgr
+      owner: repmgr
+      state: present
+  
+  become_user: postgres
+
+- name: Configure pg_hba
+  ansible.builtin.template:
+    src: ./templates/pg_hba.conf.j2
+    dest: /var/lib/pgsql/14/data/pg_hba.conf
+    mode: 0600
+    owner: postgres
+    group: postgres
+
+- name: Configure rempgr
+  ansible.builtin.template:
+    src: ./templates/repmgr.conf.j2
+    dest: /etc/repmgr/14/repmgr.conf
+    mode: 0644
+
+- name: Restart PostgreSQL
+  ansible.builtin.systemd:
+    name: postgresql-14
+    state: restarted
+
+- name: Register primary
+  ansible.builtin.script: ./files/register-primary.sh
+  become_user: postgres

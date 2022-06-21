@@ -1,0 +1,12 @@
+---
+- block:
+  - name: Prepare servers
+    include_tasks: "{{ item }}"
+    loop:
+      - disable-selinux.yml
+      - setup-prerequisites.yml
+
+  - name: Setup master
+    include_tasks: setup-master.yml
+    when: inventory_hostname in groups['master']
+  become: yes
